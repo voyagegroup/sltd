@@ -1,6 +1,6 @@
 # sltd (**s**lapd **l**og **t**ransfer **d**aemon) 
 
-sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.html#Access Logging) to Amazon S3.
+sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.html#Access%20Logging) to Amazon S3.
 
 ## Index
 
@@ -13,9 +13,7 @@ sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.ht
 
 ## Concepts
 
-* -
-* -
-* -
+* write this later.
 
 ## Requirements
 
