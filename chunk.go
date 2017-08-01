@@ -26,7 +26,10 @@ func NewChunk() *chunk {
 	return &c
 }
 
+var reNewLine = regexp.MustCompile(`\r?\n`)
+
 func (c *chunk) toJsonl() string {
+	myLoggerDebug(reNewLine.ReplaceAllString(c.ldif.text, " "))
 	es := strings.Split(strings.TrimSpace(c.ldif.text), "\n\n")
 
 	jsonSource := make([]string, len(es))
@@ -35,13 +38,13 @@ func (c *chunk) toJsonl() string {
 
 		ej := make(map[string][]string)
 		for _, dl := range dls {
-
 			if reComment.MatchString(dl) {
 				continue
 			}
 
 			key, val, err := c.parseLine(dl)
 			if err != nil {
+				myLoggerInfo(err.Error())
 				continue
 			}
 			ej[key] = append(ej[key], val)
@@ -57,30 +60,37 @@ func (c *chunk) toJsonl() string {
 }
 
 var reColon = regexp.MustCompile(`:`)
-var reBase64 = regexp.MustCompile(`^:`)
 
 func (c *chunk) parseLine(line string) (key string, val string, err error) {
 	if !reColon.MatchString(line) {
-		return "", "", errors.New("invalid format: '" + line + "'")
+		return "", "", errors.New("unexpected line format. line=" + line)
 	}
 
 	parts := strings.SplitN(line, ":", 2)
 	key = strings.TrimSpace(parts[0])
 	val = strings.TrimSpace(parts[1])
 
-	if reBase64.MatchString(val) {
-		val = c.decode(val)
+	val, err = c.decodeIfbase64(val)
+	if err != nil {
+		return "", "", errors.New("base64 decode failed. val=" + val + ", err=" + err.Error())
 	}
+
 	return key, val, nil
 }
 
-func (c *chunk) decode(val string) string {
+var reBase64 = regexp.MustCompile(`^:`)
+
+func (c *chunk) decodeIfbase64(val string) (decoded string, err error) {
+	if !reBase64.MatchString(val) {
+		return val, nil
+	}
+
 	val = strings.TrimPrefix(val, ":")
 	val = strings.TrimSpace(val)
 
-	p, err := base64.StdEncoding.DecodeString(val)
+	d, err := base64.StdEncoding.DecodeString(val)
 	if err != nil {
-		myLoggerInfo("base64 decode failed. err=" + err.Error())
+		return "", err
 	}
-	return string(p)
+	return string(d), nil
 }
