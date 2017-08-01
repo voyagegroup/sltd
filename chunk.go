@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"os"
 	"regexp"
 	"strings"
@@ -18,7 +19,6 @@ type ldif struct {
 }
 
 var reComment = regexp.MustCompile(`^\s*#`)
-var reBase64 = regexp.MustCompile(`^:`)
 
 func NewChunk() *chunk {
 	c := chunk{}
@@ -40,14 +40,10 @@ func (c *chunk) toJsonl() string {
 				continue
 			}
 
-			lines := strings.SplitN(dl, ":", 2)
-			key := strings.TrimSpace(lines[0])
-			val := strings.TrimSpace(lines[1])
-
-			if reBase64.MatchString(val) {
-				val = c.decode(val)
+			key, val, err := c.parseLine(dl)
+			if err != nil {
+				continue
 			}
-
 			ej[key] = append(ej[key], val)
 		}
 
@@ -58,6 +54,24 @@ func (c *chunk) toJsonl() string {
 	}
 
 	return strings.Join(jsonSource, "\n")
+}
+
+var reColon = regexp.MustCompile(`:`)
+var reBase64 = regexp.MustCompile(`^:`)
+
+func (c *chunk) parseLine(line string) (key string, val string, err error) {
+	if !reColon.MatchString(line) {
+		return "", "", errors.New("invalid format: '" + line + "'")
+	}
+
+	parts := strings.SplitN(line, ":", 2)
+	key = strings.TrimSpace(parts[0])
+	val = strings.TrimSpace(parts[1])
+
+	if reBase64.MatchString(val) {
+		val = c.decode(val)
+	}
+	return key, val, nil
 }
 
 func (c *chunk) decode(val string) string {
