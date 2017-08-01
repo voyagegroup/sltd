@@ -57,7 +57,7 @@ func (td *transferd) transfer() {
 		}
 		file.Close()
 
-		c := new(chunk)
+		c := NewChunk()
 		c.ldif.text = string(fileContent)
 
 		myLoggerDebug(c.toJsonl())

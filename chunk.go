@@ -26,7 +26,10 @@ func NewChunk() *chunk {
 	return &c
 }
 
+var reNewLine = regexp.MustCompile(`\r?\n`)
+
 func (c *chunk) toJsonl() string {
+	myLoggerDebug(reNewLine.ReplaceAllString(c.ldif.text, " "))
 	es := strings.Split(strings.TrimSpace(c.ldif.text), "\n\n")
 
 	jsonSource := make([]string, len(es))
@@ -35,7 +38,6 @@ func (c *chunk) toJsonl() string {
 
 		ej := make(map[string][]string)
 		for _, dl := range dls {
-
 			if reComment.MatchString(dl) {
 				continue
 			}
