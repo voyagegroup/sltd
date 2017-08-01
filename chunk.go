@@ -68,7 +68,7 @@ func (c *chunk) parseLine(line string) (key string, val string, err error) {
 	key = strings.TrimSpace(parts[0])
 	val = strings.TrimSpace(parts[1])
 
-	val, err = c.decode(val)
+	val, err = c.decodeIfbase64(val)
 	if err != nil {
 		return "", "", errors.New("base64 decode failed. val=" + val + ", err=" + err.Error())
 	}
@@ -78,7 +78,7 @@ func (c *chunk) parseLine(line string) (key string, val string, err error) {
 
 var reBase64 = regexp.MustCompile(`^:`)
 
-func (c *chunk) decode(val string) (decoded string, err error) {
+func (c *chunk) decodeIfbase64(val string) (decoded string, err error) {
 	if !reBase64.MatchString(val) {
 		return val, nil
 	}
