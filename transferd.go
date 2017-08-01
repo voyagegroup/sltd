@@ -97,6 +97,8 @@ func (td *transferd) transfer() {
 	}
 }
 
+var re = regexp.MustCompile(`\.ldif$`)
+
 func (td *transferd) getFileLists(path string) []os.FileInfo {
 	fileLists, err := ioutil.ReadDir(path)
 	if err != nil {
@@ -104,10 +106,9 @@ func (td *transferd) getFileLists(path string) []os.FileInfo {
 		return []os.FileInfo{}
 	}
 
-	r := regexp.MustCompile(`^\.ldif$`)
 	nf := []os.FileInfo{}
 	for _, f := range fileLists {
-		if f.IsDir() || r.MatchString(f.Name()) {
+		if f.IsDir() || !re.MatchString(f.Name()) {
 			continue
 		}
 		nf = append(nf, f)
