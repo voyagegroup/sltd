@@ -79,3 +79,35 @@ func callParseLine(t *testing.T, tc testCase) {
 		t.Errorf("\nactual: %v\nexpect: %v", actual_err.Error(), tc.expect[2])
 	}
 }
+
+func TestDecodeIfbase64(t *testing.T) {
+	testSetup()
+
+	testCases := []testCase{
+		{[]string{": YmFzZTY0"}, []string{"base64", ""}},
+		{[]string{":  YmFzZTY0"}, []string{"base64", ""}},
+		{[]string{":  i!!3ga! bytes"}, []string{"", "illegal base64 data at input byte 1"}},
+		{[]string{"rawstr"}, []string{"rawstr", ""}},
+	}
+
+	for _, tc := range testCases {
+		callDecodeIfbase64(t, tc)
+	}
+}
+
+func callDecodeIfbase64(t *testing.T, tc testCase) {
+	c := NewChunk()
+	actual_val, actual_err := c.decodeIfbase64(tc.input[0])
+
+	if actual_val != tc.expect[0] {
+		t.Errorf("\nactual: %v\nexpect: %v", actual_val, tc.expect[0])
+	}
+
+	if actual_err == nil && tc.expect[1] != "" {
+		t.Errorf("\nactual: %v\nexpect: no error.", tc.expect[1])
+	}
+
+	if actual_err != nil && actual_err.Error() != tc.expect[1] {
+		t.Errorf("\nactual: %v\nexpect: %v", actual_err.Error(), tc.expect[1])
+	}
+}
