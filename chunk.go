@@ -63,7 +63,10 @@ func (c *chunk) toJsonl() string {
 		jsonSource[i] = string(s)
 	}
 
-	return strings.Join(jsonSource, "\n")
+	jsonStr := strings.Join(jsonSource, "\n")
+	myLoggerDebug(jsonStr)
+
+	return jsonStr
 }
 
 var reColon = regexp.MustCompile(`:`)
