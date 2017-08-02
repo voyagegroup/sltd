@@ -18,8 +18,6 @@ type ldif struct {
 	text string
 }
 
-var reComment = regexp.MustCompile(`^\s*#`)
-
 func NewChunk() *chunk {
 	c := chunk{}
 	c.serverHostName, _ = os.Hostname()
@@ -27,6 +25,8 @@ func NewChunk() *chunk {
 }
 
 var reNewLine = regexp.MustCompile(`\r?\n`)
+var reComment = regexp.MustCompile(`^\s*#`)
+var reContinuation = regexp.MustCompile(`^ `)
 
 func (c *chunk) toJsonl() string {
 	myLoggerDebug(reNewLine.ReplaceAllString(c.ldif.text, " "))
@@ -37,8 +37,14 @@ func (c *chunk) toJsonl() string {
 		dls := strings.Split(e, "\n")
 
 		ej := make(map[string][]string)
+		prevKey := ""
 		for _, dl := range dls {
 			if reComment.MatchString(dl) {
+				continue
+			}
+
+			if reContinuation.MatchString(dl) {
+				ej[prevKey][len(ej[prevKey])-1] = ej[prevKey][len(ej[prevKey])-1] + strings.TrimPrefix(dl, " ")
 				continue
 			}
 
@@ -48,6 +54,7 @@ func (c *chunk) toJsonl() string {
 				continue
 			}
 			ej[key] = append(ej[key], val)
+			prevKey = key
 		}
 
 		ej["serverHostName"] = append(ej["serverHostName"], c.serverHostName)
