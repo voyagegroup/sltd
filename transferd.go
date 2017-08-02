@@ -60,8 +60,6 @@ func (td *transferd) transfer() {
 		c := NewChunk()
 		c.ldif.text = string(fileContent)
 
-		myLoggerDebug(c.toJsonl())
-
 		reader, writer := io.Pipe()
 		go func() {
 			gw := gzip.NewWriter(writer)
