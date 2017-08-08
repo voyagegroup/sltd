@@ -14,4 +14,4 @@ test:
 fmt:
 	go fmt
 
-travis: fmt test build
+travis: deps fmt test build
