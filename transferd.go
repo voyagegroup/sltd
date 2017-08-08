@@ -3,10 +3,10 @@ package main
 import (
 	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -15,101 +15,92 @@ import (
 )
 
 type transferd struct {
+	logPrefix         string
+	queues            *queues
 	awsRegion         string
 	s3Bucket          string
 	s3KeyPrefix       string
 	slapdAccesslogDir string
+	messages          []message
+	mutex             sync.Mutex
 }
 
-func (td *transferd) daemonize() {
-	for {
-		td.transfer()
-	}
+func NewTransferd(qs *queues) *transferd {
+	td := new(transferd)
+	td.logPrefix = "[transferd] "
+	td.queues = qs
+	return td
 }
 
-func (td *transferd) transfer() {
-	awsSleepTime := 1
-	fileSleepTime := 5
-
-	fileLists := td.getFileLists(td.slapdAccesslogDir)
-	if len(fileLists) == 0 {
-		mySleep(fileSleepTime)
-		return
-	}
-
-	for i := range fileLists {
-		targetFilePath := td.slapdAccesslogDir + fileLists[i].Name()
-
-		myLoggerDebug(targetFilePath)
-
-		file, err := os.Open(targetFilePath)
-		if err != nil {
-			myLoggerInfo("Failed to open targetFilePath: " + err.Error())
-			mySleep(fileSleepTime)
-			return
-		}
-
-		fileContent, err := ioutil.ReadAll(file)
-		if err != nil {
-			myLoggerInfo("Failed to read file: " + err.Error())
-			mySleep(fileSleepTime)
-			return
-		}
-		file.Close()
-
-		c := NewChunk()
-		c.ldif.text = string(fileContent)
-
-		reader, writer := io.Pipe()
-		go func() {
-			gw := gzip.NewWriter(writer)
-			gw.Write([]byte(c.toJsonl()))
-			gw.Close()
-			writer.Close()
-		}()
-
-		n := time.Now()
-		tp := n.Format("/2006/01/02/")
-		tf := n.Format("20060102_030405")
-		r := randString(10)
-		s3Key := path.Clean(td.s3KeyPrefix + tp + "/slapd_access_log_" + tf + "_" + r + ".jsonl.gz")
-
-		uploader := s3manager.NewUploader(session.New(&aws.Config{Region: aws.String(td.awsRegion)}))
-		result, err := uploader.Upload(&s3manager.UploadInput{
-			Body:        reader,
-			Bucket:      aws.String(td.s3Bucket),
-			Key:         aws.String(s3Key),
-			ContentType: aws.String("application/gzip"),
-		})
-
-		if err != nil {
-			myLoggerInfo("Failed to upload file: " + err.Error())
-			time.Sleep(time.Duration(awsSleepTime) * time.Second)
-			awsSleepTime = awsSleepTime * 2
-			return
-		}
-		myLoggerInfo("Succeeded to upload file to: " + result.Location)
-
-		awsSleepTime = 1
-		os.Remove(targetFilePath)
-	}
+func (td *transferd) run() {
+	go td.receive()
+	go td.timer()
 }
 
-var re = regexp.MustCompile(`\.ldif$`)
+func (td *transferd) receive() {
+	for mes := range *td.queues.transfer {
+		td.mutex.Lock()
+		td.messages = append(td.messages, mes)
+		td.mutex.Unlock()
 
-func (td *transferd) getFileLists(path string) []os.FileInfo {
-	fileLists, err := ioutil.ReadDir(path)
-	if err != nil {
-		myLoggerInfo("Directory cannot read: " + err.Error())
-		return []os.FileInfo{}
-	}
-
-	nf := []os.FileInfo{}
-	for _, f := range fileLists {
-		if f.IsDir() || !re.MatchString(f.Name()) {
+		if 10 > len(td.messages) {
 			continue
 		}
-		nf = append(nf, f)
+
+		go td.flush()
 	}
-	return nf
+}
+
+func (td *transferd) timer() {
+	for {
+		mySleep(10)
+		if 1 > len(td.messages) {
+			continue
+		}
+		go td.flush()
+	}
+}
+
+func (td *transferd) flush() error {
+	td.mutex.Lock()
+	defer td.mutex.Unlock()
+
+	chunk := []string{}
+	for _, mes := range td.messages {
+		chunk = append(chunk, mes.content)
+	}
+
+	reader, writer := io.Pipe()
+	go func() {
+		gw := gzip.NewWriter(writer)
+		gw.Write([]byte(strings.Join(chunk, "\n")))
+		gw.Close()
+		writer.Close()
+	}()
+
+	n := time.Now()
+	tp := n.Format("/2006/01/02/")
+	tf := n.Format("20060102_030405")
+	r := randString(10)
+	s3Key := path.Clean(td.s3KeyPrefix + tp + "/slapd_access_log_" + tf + "_" + r + ".jsonl.gz")
+
+	uploader := s3manager.NewUploader(session.New(&aws.Config{Region: aws.String(td.awsRegion)}))
+	result, err := uploader.Upload(&s3manager.UploadInput{
+		Body:        reader,
+		Bucket:      aws.String(td.s3Bucket),
+		Key:         aws.String(s3Key),
+		ContentType: aws.String("application/gzip"),
+	})
+
+	if err != nil {
+		myLoggerInfo(td.logPrefix + "Failed to upload file: " + err.Error())
+		return err
+	}
+	myLoggerInfo(td.logPrefix + "Succeeded to upload file to: " + result.Location)
+
+	for _, mes := range td.messages {
+		os.Remove(mes.filepath)
+	}
+	td.messages = []message{}
+	return nil
 }
