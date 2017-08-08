@@ -45,8 +45,8 @@ func main() {
 	myLoggerInfo("S3_KEY_PREFIX: " + td.s3KeyPrefix)
 
 	done := make(chan bool)
-	wd.run()
-	pd.run()
 	td.run()
+	pd.run()
+	wd.run()
 	<-done
 }

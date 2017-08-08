@@ -22,6 +22,16 @@ func NewWatcherd(qs *queues) *watcherd {
 }
 
 func (wd *watcherd) run() {
+	fs := wd.getFileLists(wd.slapdAccesslogDir)
+	for i := range fs {
+		targetFilePath := wd.slapdAccesslogDir + fs[i].Name()
+		mes, err := wd.makeMessage(targetFilePath)
+		if err != nil {
+			continue
+		}
+		*wd.queues.parser <- mes
+	}
+
 	go wd.daemonize()
 }
 
@@ -43,54 +53,57 @@ func (wd *watcherd) daemonize() {
 		select {
 		case event := <-watcher.Events:
 			if event.Op.String() == "CREATE" && reFile.MatchString(event.Name) {
-				myLoggerInfo(wd.logPrefix + event.Name)
-				content, err := wd.readFile(event.Name)
+
+				mes, err := wd.makeMessage(event.Name)
 				if err != nil {
 					continue
 				}
-
-				mes := new(message)
-				mes.filepath = event.Name
-				mes.content = content
-				*wd.queues.parser <- *mes
+				*wd.queues.parser <- mes
 			}
 		case err := <-watcher.Errors:
-			myLoggerInfo(wd.logPrefix + "error: " + err.Error())
+			myLoggerInfo(wd.logPrefix + "Error: " + err.Error())
 		}
 	}
 }
 
-func (wd *watcherd) readFile(path string) (string, error) {
-	file, err := os.Open(path)
+func (wd *watcherd) makeMessage(filepath string) (message, error) {
+	myLoggerInfo(wd.logPrefix + "New file found: " + filepath)
+
+	file, err := os.Open(filepath)
 	defer file.Close()
 
+	mes := new(message)
+
 	if err != nil {
-		myLoggerInfo("Failed to open file: " + err.Error())
-		return "", err
+		myLoggerInfo(wd.logPrefix + "Failed to open file: " + err.Error())
+		return *mes, err
 	}
 
 	content, err := ioutil.ReadAll(file)
 	if err != nil {
-		myLoggerInfo("Failed to read file: " + err.Error())
-		return "", err
+		myLoggerInfo(wd.logPrefix + "Failed to read file: " + err.Error())
+		return *mes, err
 	}
 
-	return string(content), nil
+	mes.filepath = filepath
+	mes.content = string(content)
+
+	return *mes, nil
 }
 
-//func (wd *watcherd) getFileLists(path string) []os.FileInfo {
-//	fileLists, err := ioutil.ReadDir(path)
-//	if err != nil {
-//		myLoggerInfo(wd.logPrefix + "Directory cannot read: " + err.Error())
-//		return []os.FileInfo{}
-//	}
-//
-//	nf := []os.FileInfo{}
-//	for _, f := range fileLists {
-//		if f.IsDir() || !reFile.MatchString(f.Name()) {
-//			continue
-//		}
-//		nf = append(nf, f)
-//	}
-//	return nf
-//}
+func (wd *watcherd) getFileLists(path string) []os.FileInfo {
+	fileLists, err := ioutil.ReadDir(path)
+	if err != nil {
+		myLoggerInfo(wd.logPrefix + "Directory cannot read: " + err.Error())
+		return []os.FileInfo{}
+	}
+
+	nf := []os.FileInfo{}
+	for _, f := range fileLists {
+		if f.IsDir() || !reFile.MatchString(f.Name()) {
+			continue
+		}
+		nf = append(nf, f)
+	}
+	return nf
+}
