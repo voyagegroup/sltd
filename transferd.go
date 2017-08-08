@@ -86,7 +86,7 @@ func (td *transferd) flush() error {
 
 	n := time.Now()
 	tp := n.Format("/2006/01/02/")
-	tf := n.Format("20060102_030405")
+	tf := n.Format("20060102_150405")
 	r := randString(10)
 	s3Key := path.Clean(td.s3KeyPrefix + tp + "/slapd_access_log_" + tf + "_" + r + ".jsonl.gz")
 
