@@ -17,18 +17,24 @@ import (
 type transferd struct {
 	logPrefix         string
 	queues            *queues
+	messages          []message
+	mutex             sync.Mutex
 	awsRegion         string
 	s3Bucket          string
 	s3KeyPrefix       string
 	slapdAccesslogDir string
-	messages          []message
-	mutex             sync.Mutex
+	maxLines          int
+	flushInterval     int
 }
 
 func NewTransferd(qs *queues) *transferd {
 	td := new(transferd)
 	td.logPrefix = "[transferd] "
 	td.queues = qs
+
+	td.maxLines = 100
+	td.flushInterval = 60
+
 	return td
 }
 
@@ -43,7 +49,7 @@ func (td *transferd) receive() {
 		td.messages = append(td.messages, mes)
 		td.mutex.Unlock()
 
-		if 10 > len(td.messages) {
+		if td.maxLines > len(td.messages) {
 			continue
 		}
 
@@ -53,7 +59,7 @@ func (td *transferd) receive() {
 
 func (td *transferd) timer() {
 	for {
-		mySleep(10)
+		mySleep(td.flushInterval)
 		if 1 > len(td.messages) {
 			continue
 		}
