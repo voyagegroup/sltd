@@ -52,14 +52,15 @@ func (wd *watcherd) daemonize() {
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Op.String() == "CREATE" && reFile.MatchString(event.Name) {
-
-				mes, err := wd.makeMessage(event.Name)
-				if err != nil {
-					continue
-				}
-				*wd.queues.parser <- mes
+			if event.Op.String() != "CREATE" && !reFile.MatchString(event.Name) {
+				continue
 			}
+
+			mes, err := wd.makeMessage(event.Name)
+			if err != nil {
+				continue
+			}
+			*wd.queues.parser <- mes
 		case err := <-watcher.Errors:
 			myLoggerInfo(wd.logPrefix + "Error: " + err.Error())
 		}
