@@ -36,10 +36,9 @@ func TestToJsonl(t *testing.T) {
 }
 
 func callToJsonl(t *testing.T, tc testCase) {
-	c := NewChunk()
-	c.serverHostName = "localhost"
-	c.ldif.text = tc.input[0]
-	actual := c.toJsonl()
+	pd := new(parserd)
+	pd.serverHostName = "localhost"
+	actual := pd.toJsonl(tc.input[0])
 
 	if actual != tc.expect[0] {
 		t.Errorf("\nactual: %v\nexpect: %v", actual, tc.expect[0])
@@ -63,8 +62,8 @@ func TestParseLine(t *testing.T) {
 }
 
 func callParseLine(t *testing.T, tc testCase) {
-	c := NewChunk()
-	actual_key, actual_val, actual_err := c.parseLine(tc.input[0])
+	pd := new(parserd)
+	actual_key, actual_val, actual_err := pd.parseLine(tc.input[0])
 
 	if actual_key != tc.expect[0] {
 		t.Errorf("\nactual: %v\nexpect: %v", actual_key, tc.expect[0])
@@ -99,8 +98,8 @@ func TestDecodeIfbase64(t *testing.T) {
 }
 
 func callDecodeIfbase64(t *testing.T, tc testCase) {
-	c := NewChunk()
-	actual_val, actual_err := c.decodeIfbase64(tc.input[0])
+	pd := new(parserd)
+	actual_val, actual_err := pd.decodeIfbase64(tc.input[0])
 
 	if actual_val != tc.expect[0] {
 		t.Errorf("\nactual: %v\nexpect: %v", actual_val, tc.expect[0])

@@ -9,28 +9,40 @@ import (
 	"strings"
 )
 
-type chunk struct {
+type parserd struct {
+	logPrefix      string
+	queues         *queues
 	serverHostName string
-	ldif           ldif
 }
 
-type ldif struct {
-	text string
+func NewParserd(qs *queues) *parserd {
+	pd := new(parserd)
+	pd.logPrefix = "[parserd] "
+	pd.queues = qs
+	pd.serverHostName, _ = os.Hostname()
+
+	return pd
 }
 
-func NewChunk() *chunk {
-	c := chunk{}
-	c.serverHostName, _ = os.Hostname()
-	return &c
+func (pd *parserd) run() {
+	go pd.daemonize()
+}
+
+func (pd *parserd) daemonize() {
+	for m := range *pd.queues.parser {
+		m.content = pd.toJsonl(m.content)
+		*pd.queues.transfer <- m
+
+	}
 }
 
 var reNewLine = regexp.MustCompile(`\r?\n`)
 var reComment = regexp.MustCompile(`^\s*#`)
 var reContinuation = regexp.MustCompile(`^ `)
 
-func (c *chunk) toJsonl() string {
-	myLoggerDebug(reNewLine.ReplaceAllString(c.ldif.text, " "))
-	es := strings.Split(strings.TrimSpace(c.ldif.text), "\n\n")
+func (pd *parserd) toJsonl(source string) string {
+	myLoggerDebug(pd.logPrefix + reNewLine.ReplaceAllString(source, " "))
+	es := strings.Split(strings.TrimSpace(source), "\n\n")
 
 	jsonSource := make([]string, len(es))
 	for i, e := range es {
@@ -48,30 +60,30 @@ func (c *chunk) toJsonl() string {
 				continue
 			}
 
-			key, val, err := c.parseLine(dl)
+			key, val, err := pd.parseLine(dl)
 			if err != nil {
-				myLoggerInfo(err.Error())
+				myLoggerInfo(pd.logPrefix + err.Error())
 				continue
 			}
 			ej[key] = append(ej[key], val)
 			prevKey = key
 		}
 
-		ej["serverHostName"] = append(ej["serverHostName"], c.serverHostName)
+		ej["serverHostName"] = append(ej["serverHostName"], pd.serverHostName)
 
 		s, _ := json.Marshal(ej)
 		jsonSource[i] = string(s)
 	}
 
 	jsonStr := strings.Join(jsonSource, "\n")
-	myLoggerDebug(jsonStr)
+	myLoggerDebug(pd.logPrefix + jsonStr)
 
 	return jsonStr
 }
 
 var reColon = regexp.MustCompile(`:`)
 
-func (c *chunk) parseLine(line string) (key string, val string, err error) {
+func (pd *parserd) parseLine(line string) (key string, val string, err error) {
 	if !reColon.MatchString(line) {
 		return "", "", errors.New("unexpected line format. line=" + line)
 	}
@@ -80,7 +92,7 @@ func (c *chunk) parseLine(line string) (key string, val string, err error) {
 	key = strings.TrimSpace(parts[0])
 	val = strings.TrimSpace(parts[1])
 
-	val, err = c.decodeIfbase64(val)
+	val, err = pd.decodeIfbase64(val)
 	if err != nil {
 		return "", "", errors.New("base64 decode failed. val=" + val + ", err=" + err.Error())
 	}
@@ -90,7 +102,7 @@ func (c *chunk) parseLine(line string) (key string, val string, err error) {
 
 var reBase64 = regexp.MustCompile(`^:`)
 
-func (c *chunk) decodeIfbase64(val string) (decoded string, err error) {
+func (pd *parserd) decodeIfbase64(val string) (decoded string, err error) {
 	if !reBase64.MatchString(val) {
 		return val, nil
 	}
