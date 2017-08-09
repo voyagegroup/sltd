@@ -18,6 +18,10 @@ func NewWatcherd(qs *queues) *watcherd {
 	wd := new(watcherd)
 	wd.logPrefix = "[watcherd] "
 	wd.queues = qs
+
+	// default parameters
+	wd.slapdAccesslogDir = "/var/log/slapd/cn=accesslog/"
+
 	return wd
 }
 

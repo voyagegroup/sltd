@@ -15,16 +15,15 @@ import (
 )
 
 type transferd struct {
-	logPrefix         string
-	queues            *queues
-	messages          []message
-	mutex             sync.Mutex
-	awsRegion         string
-	s3Bucket          string
-	s3KeyPrefix       string
-	slapdAccesslogDir string
-	maxLines          int
-	flushInterval     int
+	logPrefix     string
+	queues        *queues
+	messages      []message
+	mutex         sync.Mutex
+	awsRegion     string
+	s3Bucket      string
+	s3KeyPrefix   string
+	maxLines      int
+	flushInterval int
 }
 
 func NewTransferd(qs *queues) *transferd {
@@ -32,6 +31,7 @@ func NewTransferd(qs *queues) *transferd {
 	td.logPrefix = "[transferd] "
 	td.queues = qs
 
+	// default parameters
 	td.maxLines = 100
 	td.flushInterval = 60
 
