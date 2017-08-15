@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"os"
 	"strconv"
@@ -19,6 +20,17 @@ type sltd struct {
 func main() {
 	godotenv.Load()
 
+	athena := flag.Bool("athena", false, "dump Amazon Athena DDL and exit.")
+	flag.Parse()
+
+	if *athena {
+		a := new(athenaDDL)
+		a.initialize()
+		a.printCreateTable()
+		a.printAddPartition()
+		os.Exit(0)
+	}
+
 	s := new(sltd)
 	s.initialize()
 	s.run()
@@ -26,7 +38,6 @@ func main() {
 }
 
 func (s *sltd) initialize() {
-
 	s.sltdLog = os.Getenv("SLTD_LOG")
 	s.sltdLogLevel = os.Getenv("SLTD_LOG_LEVEL")
 
