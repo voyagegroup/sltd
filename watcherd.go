@@ -56,7 +56,7 @@ func (wd *watcherd) daemonize() {
 	for {
 		select {
 		case event := <-watcher.Events:
-			if event.Op.String() != "CREATE" && !reFile.MatchString(event.Name) {
+			if event.Op.String() != "CREATE" || !reFile.MatchString(event.Name) {
 				continue
 			}
 
