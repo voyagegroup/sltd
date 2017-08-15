@@ -2,7 +2,7 @@
 
 sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.html#Access%20Logging) to Amazon S3.
 
-![./sltd.png](sltd arch figure)
+![sltd arch figure](./sltd.png)
 
 ## Index
 
