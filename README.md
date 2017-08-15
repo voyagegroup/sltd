@@ -90,6 +90,12 @@ SLTD_LOG_LEVEL="XXX"
 ```
 You can use .env file as well.
 
+### run
+
+```
+$ sltd
+```
+
 ## License
 
 [MIT](./LICENSE)
