@@ -1,4 +1,4 @@
-# sltd (**s**lapd **l**og **t**ransfer **d**aemon) 
+# sltd (**s**lapd **l**og **t**ransfer **d**aemon)
 
 sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.html#Access%20Logging) to Amazon S3.
 
@@ -23,12 +23,13 @@ $ sltd
 * [Requirements](#requirements)
 * [Installation](#installation)
 * [Configure](#configure)
-* [Usage](#usage)       
-* [License](#license)    
+* [Usage](#usage)
+* [License](#license)
 
 ## Concepts
 
-* write this later.
+* For auditing, store slapd access log to Amazon S3.
+* Use Access Logging Overlay and LDIF Backend as log source.
 
 ## Requirements
 
@@ -39,20 +40,53 @@ sltd requires the following to run:
 ## Installation
 
 ```
-$ write this later.
+$ go get github.com/voyagegroup/sltd
 ```
+
+or
+
+Download from Releases Page (WIP)
 
 ## Usage
 
 ### set slapd to enable accesslog
 
-write this later
+```
+# logging target database section.
+database    mdb
+
+.. snip ..
+moduleload  accesslog
+overlay     accesslog
+logdb       cn=accesslog
+logops      all
+logsuccess  FALSE
+logpurge    03:00:00 00:30:00
+.. snip ..
+
+
+# accesslog database section.
+database    ldif
+directory   /var/log/slapd/
+suffix      cn=accesslog
+rootdn      cn=XROOTDNX
+rootpw      {SSHA}XROOTDNPWXXXXXXXXXXXXXXXXXXXXXXX
+```
 
 ### configure sltd
 
 Set your configuration as Environment Variables.
 ```
-write this later
+# require
+AWS_REGION="XXX"
+S3_BUCKET="XXX"
+
+# optional
+AWS_ACCESS_KEY_ID="XXX"
+AWS_SECRET_ACCESS_KEY="XXX"
+S3_KEY_PREFIX="XXX"
+MAX_LINES="XXX"
+SLTD_LOG_LEVEL="XXX"
 ```
 You can use .env file as well.
 
