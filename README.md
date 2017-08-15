@@ -9,8 +9,12 @@ $ sltd
 2017/08/01 18:27:41 [Info] : SLTD_LOG_LEVEL: debug
 2017/08/01 18:27:41 [Info] : SLAPD_ACCESSLOG_DIR: /var/log/slapd/cn=accesslog/
 2017/08/01 18:27:41 [Info] : AWS_REGION: ap-northeast-1
-2017/08/01 18:27:41 [Info] : S3_BUCKET: ACTUAL_BUCKET_NAME
+2017/08/01 18:27:41 [Info] : S3_BUCKET: BUCKET_NAME
 2017/08/01 18:27:41 [Info] : S3_KEY_PREFIX: slapd_access_log/
+2017/08/01 18:27:42 [Info] : [watcherd] New file found: /var/log/slapd/cn=accesslog/reqStart=20170801092742\2E000001Z.ldif
+.. snip ..
+2017/08/01 13:28:42 [Info] : [watcherd] New file found: /var/log/slapd/cn=accesslog/reqStart=20170801092842\2E000005Z.ldif
+2017/08/01 13:28:42 [Info] : [transferd] Succeeded to upload file to: https://BUCKET_NAME.s3-ap-northeast-1.amazonaws.com/slapd_access_log/2017/08/01/slapd_access_log_20170801_132842_y7uukhxdba.jsonl.gz
 ```
 
 ## Index
