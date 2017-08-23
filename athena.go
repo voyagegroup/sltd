@@ -9,17 +9,19 @@ import (
 )
 
 type athenaDDL struct {
-	location string
+	location  string
+	tablename string
 }
 
 func (ad *athenaDDL) initialize() {
 	s3Bucket := os.Getenv("S3_BUCKET")
 	s3KeyPrefix := os.Getenv("S3_KEY_PREFIX")
 	ad.location = "s3://" + path.Clean(s3Bucket+"/"+s3KeyPrefix) + "/"
+	ad.tablename = "slapd_access_log"
 }
 
 func (ad *athenaDDL) printCreateTable() {
-	ddl := `CREATE EXTERNAL TABLE IF NOT EXISTS slapd_accesslog_day (
+	ddl := `CREATE EXTERNAL TABLE IF NOT EXISTS %s (
 		serverHostName array<string>,
 		createTimestamp array<string>,
 		creatorsName array<string>,
@@ -60,25 +62,25 @@ func (ad *athenaDDL) printCreateTable() {
 		reqVersion array<string>,
 		structuralObjectClass array<string>
 	)
-	PARTITIONED BY ( "year" int, "month" int, "day" int )
+	PARTITIONED BY ( ` + "`year` int, `month` int, `day` int ) " + `
 	ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 	LOCATION '%s'
 `
 
 	fmt.Println("## CREATE TABLE DDL....")
-	fmt.Printf(ddl, ad.location)
+	fmt.Printf(ddl, ad.tablename, ad.location)
 	fmt.Println()
 }
 
 func (ad *athenaDDL) printAddPartition() {
-	ddl := "ALTER TABLE slapd_accesslog_day ADD"
+	ddl := "ALTER TABLE %s ADD"
 
 	template := `
 	PARTITION (year=%d, month=%d, day=%d)
 	LOCATION '%s%04d/%02d/%02d/'`
 
 	fmt.Println("## ADD PARTITION DDL....")
-	fmt.Printf(ddl)
+	fmt.Printf(ddl, ad.tablename)
 	start, _ := time.Parse("2006-1-2", strconv.Itoa(time.Now().Year())+"-1-1")
 	for d := start; d.Year() == start.Year(); d = d.AddDate(0, 0, 1) {
 		fmt.Printf(template, d.Year(), d.Month(), d.Day(), ad.location, d.Year(), d.Month(), d.Day())
