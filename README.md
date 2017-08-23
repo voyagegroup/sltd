@@ -1,21 +1,10 @@
 # sltd (**s**lapd **l**og **t**ransfer **d**aemon)
 
+[![Build Status](https://travis-ci.com/voyagegroup/sltd.svg?token=taSCioXFjxsWbEdJAf8F&branch=master)](https://travis-ci.com/voyagegroup/sltd)
+
 sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.html#Access%20Logging) to Amazon S3.
 
-```
-$ sltd
-2017/08/01 18:27:41 [Info] : sltd initialzing ...
-2017/08/01 18:27:41 [Info] : SLTD_LOG:
-2017/08/01 18:27:41 [Info] : SLTD_LOG_LEVEL: debug
-2017/08/01 18:27:41 [Info] : SLAPD_ACCESSLOG_DIR: /var/log/slapd/cn=accesslog/
-2017/08/01 18:27:41 [Info] : AWS_REGION: ap-northeast-1
-2017/08/01 18:27:41 [Info] : S3_BUCKET: BUCKET_NAME
-2017/08/01 18:27:41 [Info] : S3_KEY_PREFIX: slapd_access_log/
-2017/08/01 18:27:42 [Info] : [watcherd] New file found: /var/log/slapd/cn=accesslog/reqStart=20170801092742\2E000001Z.ldif
-.. snip ..
-2017/08/01 13:28:42 [Info] : [watcherd] New file found: /var/log/slapd/cn=accesslog/reqStart=20170801092842\2E000005Z.ldif
-2017/08/01 13:28:42 [Info] : [transferd] Succeeded to upload file to: https://BUCKET_NAME.s3-ap-northeast-1.amazonaws.com/slapd_access_log/2017/08/01/slapd_access_log_20170801_132842_y7uukhxdba.jsonl.gz
-```
+![sltd arch figure](./sltd.png)
 
 ## Index
 
@@ -94,11 +83,22 @@ You can use .env file as well.
 
 ```
 $ sltd
+2017/08/01 18:27:41 [Info] : sltd initialzing ...
+2017/08/01 18:27:41 [Info] : SLTD_LOG:
+2017/08/01 18:27:41 [Info] : SLTD_LOG_LEVEL: debug
+2017/08/01 18:27:41 [Info] : SLAPD_ACCESSLOG_DIR: /var/log/slapd/cn=accesslog/
+2017/08/01 18:27:41 [Info] : AWS_REGION: ap-northeast-1
+2017/08/01 18:27:41 [Info] : S3_BUCKET: BUCKET_NAME
+2017/08/01 18:27:41 [Info] : S3_KEY_PREFIX: slapd_access_log/
+2017/08/01 18:27:42 [Info] : [watcherd] New file found: /var/log/slapd/cn=accesslog/reqStart=20170801092742\2E000001Z.ldif
+.. snip ..
+2017/08/01 13:28:42 [Info] : [watcherd] New file found: /var/log/slapd/cn=accesslog/reqStart=20170801092842\2E000005Z.ldif
+2017/08/01 13:28:42 [Info] : [transferd] Succeeded to upload file to: https://BUCKET_NAME.s3-ap-northeast-1.amazonaws.com/slapd_access_log/2017/08/01/slapd_access_log_20170801_132842_y7uukhxdba.jsonl.gz
 ```
 
 ## License
 
-[MIT](./LICENSE)
+[MIT](./LICENSE.txt)
 
 ## Author
 
