@@ -19,7 +19,6 @@ fmt:
 
 travis: fmt test build
 
-
 dist: dist/clean dist/build dist/pack dist/upload
 
 dist/clean:
