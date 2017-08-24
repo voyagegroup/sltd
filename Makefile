@@ -41,4 +41,4 @@ dist/pack:
 
 dist/upload: RELEASE_VERSION=master
 dist/upload:
-	ghr -u voyagegroup -r sltd -recreate "$(RELEASE_VERSION)" dist/
+	ghr -u voyagegroup -r sltd -replace "$(RELEASE_VERSION)" dist/
