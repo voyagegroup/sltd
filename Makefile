@@ -22,6 +22,7 @@ travis: fmt test build
 dist: dist/clean dist/build dist/pack dist/upload
 
 dist/clean:
+	mkdir -p pkg/ dist/
 	rm -rf pkg/*
 	rm -rf dist/*
 
