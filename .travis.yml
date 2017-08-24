@@ -8,4 +8,10 @@ before_install:
   - make deps
 
 script:
- - make travis
+  - make travis
+
+deploy:
+  provider: script
+  script: make dist
+  on:
+    branch: master

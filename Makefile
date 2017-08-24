@@ -39,5 +39,6 @@ dist/pack:
 		zip -j dist/$${DIR}.zip pkg/$${DIR}/*; \
 	done
 
+dist/upload: RELEASE_VERSION=master
 dist/upload:
-	ghr -u voyagegroup -r sltd "v$(RELEASE_VERSION)" dist/
+	ghr -u voyagegroup -r sltd "$(RELEASE_VERSION)" dist/
