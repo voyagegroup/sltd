@@ -40,7 +40,4 @@ dist/pack:
 	done
 
 dist/upload:
-	g
-
-
-	
+	ghr -u voyagegroup -r sltd "v$(RELEASE_VERSION)" dist/
