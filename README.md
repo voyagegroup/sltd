@@ -34,7 +34,7 @@ $ go get github.com/voyagegroup/sltd
 
 or
 
-Download from Releases Page (WIP)
+Download from [Releases Page](https://github.com/voyagegroup/sltd/releases/tag/latest)
 
 ## Usage
 
