@@ -39,6 +39,6 @@ dist/pack:
 		zip -j dist/$${DIR}.zip pkg/$${DIR}/*; \
 	done
 
-dist/upload: RELEASE_VERSION=master
+dist/upload: RELEASE_VERSION=latest
 dist/upload:
-	ghr -u voyagegroup -r sltd -replace "$(RELEASE_VERSION)" dist/
+	ghr -u voyagegroup -r sltd -recreate "$(RELEASE_VERSION)" dist/
