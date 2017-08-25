@@ -1,6 +1,6 @@
 # sltd (**s**lapd **l**og **t**ransfer **d**aemon)
 
-[![Build Status](https://travis-ci.com/voyagegroup/sltd.svg?token=taSCioXFjxsWbEdJAf8F&branch=master)](https://travis-ci.com/voyagegroup/sltd)
+[![Build Status](https://travis-ci.org/voyagegroup/sltd.svg?branch=master)](https://travis-ci.org/voyagegroup/sltd)
 
 sltd transfers slapd [accesslog](http://www.openldap.org/doc/admin24/overlays.html#Access%20Logging) to Amazon S3.
 
