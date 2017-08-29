@@ -1,12 +1,16 @@
 package main
 
 import (
+	"os"
 	"testing"
 )
 
-func TestToJsonl(t *testing.T) {
+func TestMain(m *testing.M) {
 	testSetup()
+	os.Exit(m.Run())
+}
 
+func TestToJsonl(t *testing.T) {
 	testCases := []testCase{
 		{[]string{"k1: v1\nk2: v2\n"}, []string{"{\"k1\":[\"v1\"],\"k2\":[\"v2\"],\"serverHostName\":[\"localhost\"]}"}},
 		{[]string{"k1: v1\nk1: v2\n"}, []string{"{\"k1\":[\"v1\",\"v2\"],\"serverHostName\":[\"localhost\"]}"}},
@@ -35,8 +39,6 @@ func callToJsonl(t *testing.T, tc testCase) {
 }
 
 func TestParseLine(t *testing.T) {
-	testSetup()
-
 	testCases := []testCase{
 		{[]string{"k: v"}, []string{"k", "v", ""}},
 		{[]string{"k:"}, []string{"k", "", ""}},
@@ -72,8 +74,6 @@ func callParseLine(t *testing.T, tc testCase) {
 }
 
 func TestDecodeIfbase64(t *testing.T) {
-	testSetup()
-
 	testCases := []testCase{
 		{[]string{": YmFzZTY0"}, []string{"base64", ""}},
 		{[]string{":  YmFzZTY0"}, []string{"base64", ""}},
