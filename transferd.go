@@ -2,6 +2,8 @@ package main
 
 import (
 	"compress/gzip"
+	"crypto/md5"
+	"encoding/base64"
 	"io"
 	"os"
 	"path"
@@ -77,8 +79,11 @@ func (td *transferd) flush() error {
 	}
 
 	reader, writer := io.Pipe()
+	var md5sum string
+	hash := md5.New()
 	go func() {
 		gw := gzip.NewWriter(writer)
+		md5sum = base64.StdEncoding.EncodeToString(hash.Sum([]byte(strings.Join(chunk, "\n"))))
 		gw.Write([]byte(strings.Join(chunk, "\n")))
 		gw.Close()
 		writer.Close()
@@ -96,6 +101,7 @@ func (td *transferd) flush() error {
 		Bucket:      aws.String(td.s3Bucket),
 		Key:         aws.String(s3Key),
 		ContentType: aws.String("application/gzip"),
+		ContentMD5:  aws.String(md5sum),
 	})
 
 	if err != nil {
