@@ -83,8 +83,9 @@ func (td *transferd) flush() error {
 	hash := md5.New()
 	go func() {
 		gw := gzip.NewWriter(writer)
-		md5sum = base64.StdEncoding.EncodeToString(hash.Sum([]byte(strings.Join(chunk, "\n"))))
-		gw.Write([]byte(strings.Join(chunk, "\n")))
+		buffer := []byte(strings.Join(chunk, "\n"))
+		gw.Write(buffer)
+		md5sum = base64.StdEncoding.EncodeToString(hash.Sum(buffer))
 		gw.Close()
 		writer.Close()
 	}()
