@@ -24,5 +24,3 @@ jobs:
     - name: fmt, test, build
       run: make travis
 
-#   - name: deploy
-#     run: hoge
